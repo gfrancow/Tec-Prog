@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+# -+- coding: utf-8 -+-
+
+
+import sys,os
+from intelhex import *
+from avrmcu import *
+
+stop=False
+userData=sys.argv[1:]
+opcions=userData[0]
+fitxer=userData[1]
+if fitxer[-4:]=='.hex':
+	IH=IntelHex16bit(fitxer)
+elif fitxer[-4:]=='.asm':
+	os.system('avra '+fitxer)
+	fitxerHex=open(fitxer[:-4]+'.hex','r')
+	IH=IntelHex16bit(fitxerHex)
+	fitxerHex.close()
+elif fitxer[-4:]=='.lst':
+	f=open(fitxer)
+	fitxerMostra=f.read()
+	f.close()
+	print fitxerMostra
+	stop=True
+
+if not stop:
+	avr=AvrMcu()
+	if opcions[0]=='-':
+		if 't' in opcions:
+			avr.set_trace(True)
+	prog=[]
+	for i in range(IH.maxaddr()+1):
+		prog.append(IH[i])
+
+	avr.set_prog(prog)
+	avr.run()
+
+	if opcions[0]=='-':
+		if 'p' in opcions:
+			print avr.dump_prog()
+		if 'r' in opcions:
+			print avr.dump_reg()
+		if 'd' in opcions:
+			print avr.dump_dat()
+else:
+	print 'Fi de simulació'
+
